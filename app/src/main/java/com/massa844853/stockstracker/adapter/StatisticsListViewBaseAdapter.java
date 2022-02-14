@@ -16,13 +16,13 @@ import com.massa844853.stockstracker.models.StatisticValue;
 
 import java.util.List;
 
-public class StatisticsListViewAdapter extends BaseAdapter {
+public class StatisticsListViewBaseAdapter extends BaseAdapter {
 
 
     private List<Statistic> eleStatistic;
     private Activity activity;
 
-    public StatisticsListViewAdapter(List<Statistic> eleStatistic, Activity activity) {
+    public StatisticsListViewBaseAdapter(List<Statistic> eleStatistic, Activity activity) {
         this.eleStatistic = eleStatistic;
         this.activity = activity;
     }

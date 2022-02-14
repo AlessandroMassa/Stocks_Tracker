@@ -1,9 +1,6 @@
 package com.massa844853.stockstracker.ui;
 
-import android.app.Application;
-import android.content.Intent;
 import android.graphics.Paint;
-import android.graphics.Point;
 import android.os.Bundle;
 
 import androidx.core.content.res.ResourcesCompat;
@@ -13,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.SearchView;
@@ -30,20 +26,14 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.CandleData;
 import com.github.mikephil.charting.data.CandleDataSet;
 import com.github.mikephil.charting.data.CandleEntry;
-import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.tabs.TabLayout;
-import com.google.firebase.auth.FirebaseAuth;
 import com.massa844853.stockstracker.R;
-import com.massa844853.stockstracker.RunnableChartData;
-import com.massa844853.stockstracker.adapter.StatisticsListViewAdapter;
-import com.massa844853.stockstracker.models.News;
+import com.massa844853.stockstracker.adapter.StatisticsListViewBaseAdapter;
 import com.massa844853.stockstracker.models.Statistic;
-import com.massa844853.stockstracker.models.StatisticsResponse;
 import com.massa844853.stockstracker.models.StockPrice;
 import com.massa844853.stockstracker.repository.ChartDataRepository;
 import com.massa844853.stockstracker.repository.StatisticsRepository;
 import com.massa844853.stockstracker.utils.ChartDataResponseCallback;
-import com.massa844853.stockstracker.utils.NewsResponseCallback;
 import com.massa844853.stockstracker.utils.StatisticsResponseCallback;
 
 
@@ -68,7 +58,7 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
     private List<Statistic> eleStatitistic;
 
     private StatisticsRepository statisticsRepository;
-    private StatisticsListViewAdapter statisticsListViewAdapter;
+    private StatisticsListViewBaseAdapter statisticsListViewAdapter;
 
     private ChartDataRepository chartDataRepository;
 
@@ -94,7 +84,7 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
 
         eleStatitistic = new ArrayList<>();
         statisticsRepository = new StatisticsRepository(requireActivity().getApplication(), this);
-        statisticsListViewAdapter = new StatisticsListViewAdapter(eleStatitistic, getActivity());
+        statisticsListViewAdapter = new StatisticsListViewBaseAdapter(eleStatitistic, getActivity());
         listViewStatistics.setAdapter(statisticsListViewAdapter);
 
         candleEntryArrayList = new ArrayList<>();

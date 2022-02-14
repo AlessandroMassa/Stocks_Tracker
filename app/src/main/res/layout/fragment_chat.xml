@@ -46,12 +46,14 @@
             android:background="@drawable/background_chat_input"
             app1:layout_constraintBottom_toBottomOf="parent"
             app1:layout_constraintEnd_toEndOf="parent">
+
             <ImageView
                 android:id="@+id/buttonSend"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginStart="4dp"
-                android:background="@color/blue"
+                android:background="@drawable/background_chat_input"
+                android:backgroundTint="@color/blue"
                 android:padding="8dp"
                 android:src="@drawable/ic_send"
                 app1:tint="@color/white" />
