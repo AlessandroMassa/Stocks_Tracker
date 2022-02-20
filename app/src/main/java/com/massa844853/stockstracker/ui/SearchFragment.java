@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import com.github.mikephil.charting.charts.CandleStickChart;
@@ -47,6 +48,7 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
     private final String[] periods = {"1d", "5d", "1mo", "3mo", "1y", "5y"};
     private SearchView searchView;
     private String asset = "";
+
     private EditText editText;
     private int position = 0;
     private TextView stockName;
@@ -54,8 +56,7 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
     private TextView actualStockPrice;
     private ProgressBar progressBarSearch;
     private ListView listViewStatistics;
-
-    private List<Statistic> eleStatitistic;
+    private MainActivity mainActivity;
 
     private StatisticsRepository statisticsRepository;
     private StatisticsListViewBaseAdapter statisticsListViewAdapter;
@@ -82,15 +83,24 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
         searchView = (SearchView) view.findViewById(R.id.searchView);
         listViewStatistics = (ListView)  view.findViewById(R.id.listViewStatistics);
 
-        eleStatitistic = new ArrayList<>();
+        mainActivity = (MainActivity) getActivity();
+
         statisticsRepository = new StatisticsRepository(requireActivity().getApplication(), this);
-        statisticsListViewAdapter = new StatisticsListViewBaseAdapter(eleStatitistic, getActivity());
+        statisticsListViewAdapter = new StatisticsListViewBaseAdapter(mainActivity.newsPricesViewModel.getStatisticList(), getActivity());
         listViewStatistics.setAdapter(statisticsListViewAdapter);
 
         candleEntryArrayList = new ArrayList<>();
         chartDataRepository = new ChartDataRepository(requireActivity().getApplication(), this);
 
         setChartStyle();
+
+        if(mainActivity.newsPricesViewModel.getPriceList().size() != 0)
+             populateChart();
+        if(mainActivity.newsPricesViewModel.getStatisticList().size() != 0)
+             populateStatistics();
+
+        tabLayout.getTabAt(mainActivity.newsPricesViewModel.getPosition()).select();
+
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
 
@@ -101,15 +111,11 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
 
                     searchView.clearFocus();
                     editText.setText("");
-                    stockName.setText("");
-                    stockReturn.setText("");
-                    actualStockPrice.setText("");
                     progressBarSearch.setVisibility(View.VISIBLE);
 
                     candleEntryArrayList = new ArrayList<>();
                     statisticsRepository.start(asset);
                     chartDataRepository.start(asset, intervals[position] , periods[position]);
-
 
                 }
                 return true;
@@ -131,12 +137,12 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-               if(!asset.isEmpty()) {
-                    position = tab.getPosition();
+                position = tab.getPosition();
+                mainActivity.newsPricesViewModel.setPosition(position);
+               if(!mainActivity.newsPricesViewModel.getAsset().isEmpty()) {
                     progressBarSearch.setVisibility(View.VISIBLE);
-
                     candleEntryArrayList = new ArrayList<>();
-                    chartDataRepository.start(asset, intervals[position] , periods[position]);
+                    chartDataRepository.start(mainActivity.newsPricesViewModel.getAsset(), intervals[position] , periods[position]);
                }
             }
 
@@ -158,7 +164,6 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
     {
 
         //searchview
-
         int id = searchView.getContext()
                 .getResources()
                 .getIdentifier("android:id/search_src_text", null, null);
@@ -166,6 +171,7 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
         editText.setTextSize(20);
         editText.setHintTextColor(ResourcesCompat.getColor(getResources(), R.color.grey, null));
         editText.setTextColor(ResourcesCompat.getColor(getResources(), R.color.white, null));
+        editText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
         //chart
         YAxis yAxisRight = chartPrices.getAxisRight();
@@ -200,6 +206,7 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
         chartPrices.setDragEnabled(true);
         chartPrices.setScaleEnabled(true);
         chartPrices.setNoDataTextColor(ResourcesCompat.getColor(getResources(), R.color.grey, null));
+        
 
     }
 
@@ -207,14 +214,10 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
     @Override
     public void onResponse(List<Statistic> eleStatistic) {
 
-        this.eleStatitistic.addAll(eleStatistic);
-        if(this.eleStatitistic != null) {
-            requireActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    statisticsListViewAdapter.notifyDataSetChanged();
-                }
-            });
+        if(eleStatistic != null) {
+            mainActivity.newsPricesViewModel.getStatisticList().clear();
+            mainActivity.newsPricesViewModel.getStatisticList().addAll(eleStatistic);
+            populateStatistics();
         }
     }
 
@@ -222,15 +225,37 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
     @Override
     public void onResponsePrices(List<StockPrice> pricesList) {
 
-        if(pricesList != null)
-        {
+        if(pricesList != null) {
+            mainActivity.newsPricesViewModel.getPriceList().clear();
+            mainActivity.newsPricesViewModel.getPriceList().addAll(pricesList);
+            if(!asset.isEmpty())
+                mainActivity.newsPricesViewModel.setAsset(asset);
+            populateChart();
+        }
+    }
+
+    @Override
+    public void onFailure(String errorMessage) {
+        asset = mainActivity.newsPricesViewModel.getAsset();
+        progressBarSearch.setVisibility(View.INVISIBLE);
+        Toast.makeText(getContext(), "Error. "+ errorMessage,Toast.LENGTH_LONG).show();
+    }
+
+    private double calculateReturn(double openPrice, double closePrice)
+    {
+        return closePrice/openPrice - 1;
+    }
+
+
+    private void populateChart()
+    {
         requireActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                for (int i = 0; i < pricesList.size(); i++)
+                for (int i = 0; i < mainActivity.newsPricesViewModel.getPriceList().size(); i++)
                 {
-                    candleEntryArrayList.add(new CandleEntry(i, (float)pricesList.get(i).getHigh(), (float)pricesList.get(i).getLow(),
-                            (float)pricesList.get(i).getOpen(), (float)pricesList.get(i).getClose()));
+                    candleEntryArrayList.add(new CandleEntry(i, (float)mainActivity.newsPricesViewModel.getPriceList().get(i).getHigh(), (float)mainActivity.newsPricesViewModel.getPriceList().get(i).getLow(),
+                            (float)mainActivity.newsPricesViewModel.getPriceList().get(i).getOpen(), (float)mainActivity.newsPricesViewModel.getPriceList().get(i).getClose()));
                 }
 
                 CandleDataSet set1 = new CandleDataSet(candleEntryArrayList, "DataSet 1");
@@ -249,7 +274,7 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
                 chartPrices.setData(data);
                 chartPrices.invalidate();
 
-                float returnValue = Math.round(calculateReturn(pricesList.get(0).getOpen(), pricesList.get(pricesList.size() - 1).getClose()) * 10000)/100F;
+                float returnValue = Math.round(calculateReturn(mainActivity.newsPricesViewModel.getPriceList().get(0).getOpen(), mainActivity.newsPricesViewModel.getPriceList().get(mainActivity.newsPricesViewModel.getPriceList().size() - 1).getClose()) * 10000)/100F;
 
                 String ret = "";
                 if (returnValue > 0)
@@ -267,26 +292,20 @@ public class SearchFragment extends Fragment implements StatisticsResponseCallba
                     ret = returnValue + "%";
                 }
                 stockReturn.setText(ret);
-                String actual = String.valueOf(Math.round(pricesList.get(pricesList.size() - 1).getClose()*100)/100F) + "$";
+                String actual = String.valueOf(Math.round(mainActivity.newsPricesViewModel.getPriceList().get(mainActivity.newsPricesViewModel.getPriceList().size() - 1).getClose()*100)/100F) + "$";
                 actualStockPrice.setText(actual);
-                stockName.setText(asset.toUpperCase());
+                stockName.setText(mainActivity.newsPricesViewModel.getAsset().toUpperCase());
                 progressBarSearch.setVisibility(View.INVISIBLE);
             }
         });
-        }
-
     }
-
-    @Override
-    public void onFailure(String errorMessage) {
-
-        chartPrices.clear();
-        progressBarSearch.setVisibility(View.INVISIBLE);
-        Toast.makeText(getContext(), "Error. "+ errorMessage,Toast.LENGTH_LONG).show();
-    }
-
-    private double calculateReturn(double openPrice, double closePrice)
+    private void populateStatistics()
     {
-        return closePrice/openPrice - 1;
+        requireActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                statisticsListViewAdapter.notifyDataSetChanged();
+            }
+        });
     }
 }

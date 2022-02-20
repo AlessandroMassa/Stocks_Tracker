@@ -186,6 +186,7 @@
                 app:layout_constraintTop_toTopOf="parent">
 
             </com.github.mikephil.charting.charts.CandleStickChart>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 

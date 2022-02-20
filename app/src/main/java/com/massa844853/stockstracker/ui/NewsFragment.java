@@ -18,7 +18,7 @@ import com.massa844853.stockstracker.utils.NewsResponseCallback;
 import com.massa844853.stockstracker.adapter.NewsListViewBaseAdapter;
 import com.massa844853.stockstracker.models.News;
 import com.massa844853.stockstracker.repository.NewsRepository;
-import com.massa844853.stockstracker.viewmodels.NewsViewModel;
+import com.massa844853.stockstracker.viewmodels.NewsPricesViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +32,7 @@ public class NewsFragment extends Fragment implements NewsResponseCallback {
     private NewsListViewBaseAdapter newsListViewBaseAdapter;
     private ListView listView;
     private List<News> newsList;
-    private NewsViewModel newsViewModel;
+    private MainActivity mainActivity;
 
 
     @Override
@@ -46,7 +46,8 @@ public class NewsFragment extends Fragment implements NewsResponseCallback {
         progressBar = view.findViewById(R.id.progress_bar);
         listView = view.findViewById(R.id.listview_news);
 
-        newsViewModel = new ViewModelProvider(requireActivity()).get(NewsViewModel.class);
+        mainActivity = (MainActivity) getActivity();
+
         newsList = new ArrayList<>();
         newsListViewBaseAdapter = new NewsListViewBaseAdapter(newsList, getActivity());
         listView.setAdapter(newsListViewBaseAdapter);
@@ -59,7 +60,7 @@ public class NewsFragment extends Fragment implements NewsResponseCallback {
 
         progressBar.setVisibility(View.VISIBLE);
         newsRepository = new NewsRepository(requireActivity().getApplication(), this);
-        newsRepository.start(newsViewModel.getLastUpdate());
+        newsRepository.start(mainActivity.newsPricesViewModel.getLastUpdate());
 
         return view;
     }
@@ -71,7 +72,7 @@ public class NewsFragment extends Fragment implements NewsResponseCallback {
             requireActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    newsViewModel.setLastUpdate(lastUpdate);
+                    mainActivity.newsPricesViewModel.setLastUpdate(lastUpdate);
                     newsListViewBaseAdapter.notifyDataSetChanged();
                     progressBar.setVisibility(View.GONE);
                 }

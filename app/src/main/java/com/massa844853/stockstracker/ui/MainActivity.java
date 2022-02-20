@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
@@ -35,6 +36,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.massa844853.stockstracker.R;
 import com.massa844853.stockstracker.models.User;
+import com.massa844853.stockstracker.viewmodels.NewsPricesViewModel;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -64,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private User user;
     private DatabaseReference databaseReference;
+    public NewsPricesViewModel newsPricesViewModel;
+
 
 
     @Override
@@ -72,6 +76,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         auth = FirebaseAuth.getInstance();
+
+        newsPricesViewModel =new ViewModelProvider(this).get(NewsPricesViewModel.class);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         ImageView imageButtonLogin = toolbar.findViewById(R.id.buttonLogin);
